@@ -876,7 +876,8 @@ server_eval() {
 	server_property "$1" USERNAME
 	server_property "$1" SCREEN_NAME
 
-	as_user "${SERVER_USERNAME[$1]}" "screen -p 0 -S ${SERVER_SCREEN_NAME[$1]} -X eval 'stuff \"$2\"\015'"
+	#as_user "${SERVER_USERNAME[$1]}" "screen -p 0 -S ${SERVER_SCREEN_NAME[$1]} -X eval 'stuff \"$2\"\015'"
+	as_user "${SERVER_USERNAME[$1]}" "tmux send-keys -t \"${SERVER_SCREEN_NAME[$1]}:0.0\" '$2' Enter"
 }
 
 # The same as server_eval, but also waits for a log entry before returning
@@ -1412,7 +1413,8 @@ server_start() {
 		printf "Starting server..."
 
 		# This is the important line! Let's start this server!
-		as_user "${SERVER_USERNAME[$1]}" "cd \"${SERVER_PATH[$1]}\" && screen -dmS \"${SERVER_SCREEN_NAME[$1]}\" ${SERVER_INVOCATION[$1]}"
+		# as_user "${SERVER_USERNAME[$1]}" "cd \"${SERVER_PATH[$1]}\" && screen -dmS \"${SERVER_SCREEN_NAME[$1]}\" ${SERVER_INVOCATION[$1]}"
+		as_user "${SERVER_USERNAME[$1]}" "cd \"${SERVER_PATH[$1]}\" && tmux new-session -d -s \"${SERVER_SCREEN_NAME[$1]}\" '${SERVER_INVOCATION[$1]}'"
 
 		# Wait for the server to fully start
 		server_log_dots_for_lines "$1" "$time_now" "${SERVER_CONSOLE_EVENT_OUTPUT_START[$1]}" "${SERVER_CONSOLE_EVENT_TIMEOUT_START[$1]}"
@@ -3150,7 +3152,8 @@ command_server_cmdlog() {
 command_server_console() {
 	if server_is_running "$1"; then
 		server_property "$1" USERNAME
-		as_user "${SERVER_USERNAME[$1]}" "screen -r ${SERVER_SCREEN_NAME[$1]}"
+		# as_user "${SERVER_USERNAME[$1]}" "screen -r ${SERVER_SCREEN_NAME[$1]}"
+		as_user "${SERVER_USERNAME[$1]}" "tmux attach-session -t ${SERVER_SCREEN_NAME[$1]}"
 	else
 		error_exit SERVER_STOPPED "Server \"${SERVER_NAME[$1]}\" is not running."
 	fi
